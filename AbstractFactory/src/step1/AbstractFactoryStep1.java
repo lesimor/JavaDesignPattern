@@ -156,6 +156,7 @@ class LGMotor extends Motor{
 	 
 	public LGMotor(){
 	  super();
+	  
 	}
 	
 	public LGMotor(Door door){
