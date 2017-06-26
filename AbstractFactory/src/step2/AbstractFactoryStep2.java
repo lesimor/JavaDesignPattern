@@ -1,13 +1,65 @@
-/* 상황: 엘리베이터 부품업체 변경하기
- * 기본적인 골격은 TemplateMethod 패턴을 따른다.
- * 모터와 같이 door 또한 각 제조사별로 기능이 비슷할 것이기 때문에 템플릿 메소드로 구현.
- * */
-package step1;
+package step2;
 
 enum DoorStatus { CLOSED, OPENED }
 enum MotorStatus { MOVING, STOPPED }
 enum Direction { UP, DOWN }
+enum VendorID { LG, HYUNDAI, SAMSUNG }
 
+abstract class ElevatorFactory {
+	public abstract Motor createMotor();
+	public abstract Door createDoor(); 
+}
+
+// LG 부품을 생성하는 팩토리.
+class LGElevatorFactory extends ElevatorFactory {
+
+	@Override
+	public Motor createMotor() {
+		// TODO Auto-generated method stub
+		return new LGMotor();
+	}
+
+	@Override
+	public Door createDoor() {
+		// TODO Auto-generated method stub
+		return new LGDoor();
+	}
+	
+}
+
+// Hyundai 부품을 생성하는 팩토리.
+class HyundaiElevatorFactory extends ElevatorFactory {
+
+	@Override
+	public Motor createMotor() {
+		// TODO Auto-generated method stub
+		return new HyundaiMotor();
+	}
+
+	@Override
+	public Door createDoor() {
+		// TODO Auto-generated method stub
+		return new HyundaiDoor();
+	}
+	
+}
+
+// Samsung 부품을 생성하는 팩토리
+class SamsungElevatorFactory extends ElevatorFactory {
+
+	@Override
+	public Motor createMotor() {
+		// TODO Auto-generated method stub
+		return new SamsungMotor();
+	}
+
+	@Override
+	public Door createDoor() {
+		// TODO Auto-generated method stub
+		return new SamsungDoor();
+	}
+	
+}
 abstract class Door {
 	private DoorStatus doorStatus;
 	
@@ -68,8 +120,22 @@ class HyundaiDoor extends Door {
 	
 }
 
-// 팩토리 메서드 패턴을 적용하여 모터클래스 생성.
-enum VendorID { LG, HYUNDAI }
+// 삼성 모터 추가.
+class SamsungDoor extends Door {
+
+	@Override
+	protected void doClose() {
+		// TODO Auto-generated method stub
+		System.out.println("Samsung Door is closed");
+	}
+
+	@Override
+	protected void doOpen() {
+		// TODO Auto-generated method stub
+		System.out.println("Samsung Door is opened");
+	}
+	
+}
 
 class DoorFactory { // 팩토리 메서드 패턴을 사용.
 	public static Door createDoor(VendorID vendorID){
@@ -87,7 +153,7 @@ class DoorFactory { // 팩토리 메서드 패턴을 사용.
 	
 }
 
-// 템플릿메서드 패턴을 적용한 모터 추상 클래스.
+//템플릿메서드 패턴을 적용한 모터 추상 클래스.
 abstract class Motor{
 	protected Door door;
 	private MotorStatus motorStatus;
@@ -129,19 +195,9 @@ abstract class Motor{
 	protected abstract void moveMotor(Direction direction);
 }
 
-// 현대 모터.
+//현대 모터.
 class HyundaiMotor extends Motor{
-	private Door door;
-	private MotorStatus motorStatus;
-	
-	public HyundaiMotor(){
-		super();
-	}
-	
-	public HyundaiMotor(Door door){
-		super(door);
-	}
-	
+
 	protected void moveMotor(Direction direction){
 		// Hyundai motor를 구동시킴.
 		System.out.println("Move Hyundai motor");
@@ -151,17 +207,6 @@ class HyundaiMotor extends Motor{
 }
 
 class LGMotor extends Motor{
-	private Door door;
-	private MotorStatus motorStatus;
-	 
-	public LGMotor(){
-	  super();
-	  
-	}
-	
-	public LGMotor(Door door){
-	  super(door);
-	}
 	
 	protected void moveMotor(Direction direction){
 	  // LG motor를 구동시킴.
@@ -169,51 +214,33 @@ class LGMotor extends Motor{
 	}
 }
 
-class MotorFactory {
-	public static Motor createMotor(VendorID vendorID){
-		Motor motor = null;
-		switch(vendorID){
-		case LG:
-			motor = new LGMotor();
-			break;
-		case HYUNDAI:
-			motor = new HyundaiMotor();
-			break;
-		// 문제점 2
-		// 새로운 제조 업체의 부품을 지원해야 하는 경우.
-		//case SAMSUNG:
-		//	motor = new SamsungMotor();
-		//	break;
-		}
-		return motor;
+class SamsungMotor extends Motor {
+
+	@Override
+	protected void moveMotor(Direction direction) {
+		System.out.println("Move Samsung Motor");
 	}
+	
 }
 
-public class AbstractFactoryStep1 {
+public class AbstractFactoryStep2 {
 
 	public static void main(String[] args) {
-		// LG의 부품을 사용해야 하는 경우.
-		Door lgDoor = DoorFactory.createDoor(VendorID.LG);
-		Motor lgMotor = MotorFactory.createMotor(VendorID.LG);
-		lgMotor.setDoor(lgDoor);
-		// 현대의 부품을 사용해야 하는 경우
-		Door hyundaiDoor = DoorFactory.createDoor(VendorID.HYUNDAI);
-		Motor hyundaiMotor = MotorFactory.createMotor(VendorID.HYUNDAI);
-		hyundaiMotor.setDoor(hyundaiDoor);
+		ElevatorFactory factory = null;
+		String vendorName = "lg";
+		if(vendorName.equalsIgnoreCase("LG"))
+			factory = new LGElevatorFactory();
+		else if(vendorName.equalsIgnoreCase("Hyundai"))
+			factory = new HyundaiElevatorFactory();
+		else
+			factory = new SamsungElevatorFactory();
 		
-		// 문제점1 
-		// 다른 제조 업체의 부품을 사용해야 하는 경우.
-		// 세 종류의 램프, 두 종류의 센서, 스피커, 두 종류의 버튼 등 총 10개의 부품을 사용해야 한다면?
-		// ArrivalSensorFactory, DirectionLampFactory, WeightSensorFactory, SpeakFactory 등등
-		// 각각의 부품마다 팩토리 메서드 클래스를 다 만들어줘야 한다.
-		 
+		Door door = factory.createDoor();
+		Motor motor = factory.createMotor();
+		motor.setDoor(door);
 		
-		// 문제점 요약
-		// 기존의 팩토리 메서드 패턴을 이용한 객체 생성은, 관련 있는 여러 개의 객체를 일관성 있는 방식으로 생성하는 경우에
-		// 많은 코드 변경이 발생한다.
-		lgDoor.open();
-		lgMotor.move(Direction.UP);
-		
+		door.open();
+		motor.move(Direction.UP);
 	}
 
 }
